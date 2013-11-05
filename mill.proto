@@ -1,0 +1,67 @@
+package mill;
+
+message Command {
+    enum CommandType {
+        PAUSE = 0;
+        FEED = 1;
+        FEEDTO = 2;
+        RAPID = 3;
+        RAPIDTO = 4;
+        ARCTO = 5;
+        ZERO = 6;
+    }
+
+    optional CommandType type = 1;
+    optional double x = 2;
+    optional double y = 3;
+    optional double z = 4;
+    optional double v = 5;
+    optional double a = 6;
+    optional double i = 7;
+    optional double j = 8;
+    optional double k = 9;
+}
+
+message CommandList {
+    repeated Command command = 1;
+}
+
+message CommandReceived {
+    optional int32 number = 1;
+}
+
+message CommandComplete {
+    optional int32 number = 1;
+}
+
+message MillState {
+    message Axis {
+        enum Direction {
+           IDLE = 0;
+           POS = 1;
+           NEG = 1;
+        }
+        optional Direction direction = 1;
+        optional double position = 2;
+        optional double velocity = 3;
+        optional double acceleration = 4;
+    }
+
+    optional Axis x = 1;
+    optional Axis y = 2;
+    optional Axis z = 3;
+    optional Command current_command = 4;
+}
+
+message Request {
+    optional Command command = 1;
+    optional CommandList command_list = 2;
+}
+
+message Response {
+    optional CommandReceived command_received = 1;
+    optional CommandComplete command_complete = 2;
+    optional MillState mill_state = 3;
+}
+
+

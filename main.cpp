@@ -1,17 +1,23 @@
 /* main.cpp */
 
+#include <fstream>
+
+#include <stdlib.h>
 #include <unistd.h>
 #include <sched.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include <math.h>
-
-#include <deque>
+#include <sys/socket.h>
 
 #include "timer.h"
 #include "parport.h"
 #include "parport_mill_driver.h"
+#include "move_queue.h"
+#include "gcode_parser.h"
+#include "server.h"
+
+#include "proto/mill.pb.h"
 
 class TestHandler : public TimerHandler
 {
@@ -41,106 +47,19 @@ public:
 
 static volatile int not_done = 1;
 
-void sleep_till_done()
+template <typename F>
+void sleep_till_done(F d)
 {
-    while (not_done) {
+    while (!d()) {
         sleep(1);
     }
 }
 
-struct Move
-{
-    Movement x;
-    Movement y;
-    Movement z;
-};
-
-class MoveQueue : public MillDriverCallback
-{
-public:
-    MoveQueue(MillDriver* d)
-        : _d(d), _queue()
-    {
-        _x = 0;
-        _y = 0;
-        _z = 0;
-        _vel = 12;
-        _acc = 0;
-    }
-
-    ~MoveQueue() {}
-
-    void movement_complete() {
-        if (_queue.empty()) {
-            not_done = 0;
-        } else {
-            Move& m = _queue.front();
-
-            _d->move(&m.x, &m.y, &m.z, this);
-
-            _queue.pop_front();
-        }
-    }
-
-    void set(double x, double y, double z)
-    {
-        _x = x;
-        _y = y;
-        _z = z;
-    }
-
-    void move_to(double x, double y, double z)
-    {
-        double dx = _x - x;
-        double dy = _y - y;
-        double dz = _z - z;
-
-        Move m;
-
-        setup(m.x, _x, x);
-        setup(m.y, _y, y);
-        setup(m.z, _z, z, true);
-        _x = x;
-        _y = y;
-        _z = z;
-
-        _queue.push_back(m);
-    }
-
-    void go() {
-        Move& m = _queue.front();
-
-        _d->move(&m.x, &m.y, &m.z, this);
-
-        _queue.pop_front();
-    }
-
-    void setup(Movement& m, double o, double n, bool f = false)
-    {
-        double d = o - n;
-        m.direction = d < 0 ? 0 : 1;
-        if (f) {
-            m.direction = 1 - m.direction;
-        }
-        m.distance = fabs(d);
-        m.velocity = _vel;
-        m.acceleration = _acc;
-    }
-
-private:
-    std::deque<Move> _queue;
-    MillDriver*      _d;
-    double _x, _y, _z;
-    double _vel;
-    double _acc;
-};
-
-
-int main(int argc, char** argv)
+void init_realtime()
 {
     if (geteuid() != 0) {
         printf("need to be root yo!\n");
-        return 1;
+        exit(1);
     }
 
     // rt goodness
@@ -151,6 +70,13 @@ int main(int argc, char** argv)
         perror("sched_setscheduler");
     }
 
+    // ... prealloc stack
+    // ... memlocking
+}
+
+void move_test()
+{
+    init_realtime();
     ParPortMillDriver driver("/dev/parport0");
     MoveQueue q(&driver);
 
@@ -177,11 +103,13 @@ int main(int argc, char** argv)
     //q.move_to(0, 10, 0);
     //q.move_to(0, 0, 0);
 
-    q.go();
+    q.go([] () { std::cout << " all done\n"; });
 
-    sleep_till_done();
+    sleep_till_done([&]() { return q.done(); });
+}
 
-    /*
+void timer_test()
+{
     TestHandler h;
     TestHandler h2;
     TestHandler h3;
@@ -200,7 +128,260 @@ int main(int argc, char** argv)
     h.report();
     h2.report();
     h3.report();
-    */
+}
+
+void gcode_test(const std::string& path)
+{
+    GcodeParser p;
+
+    p.parse(path);
+}
+
+void clear_axis(mill::MillState::Axis* a)
+{
+    a->set_direction(mill::MillState::Axis::IDLE);
+    a->set_position(0);
+    a->set_velocity(0);
+    a->set_acceleration(0);
+}
+
+class ProtobufSession : public Session
+{
+public:
+    ProtobufSession(int s, MoveQueue& q) : Session(s), millq(q)
+    {}
+
+    void on_connected()
+    {
+        std::cout << "Connected!\n";
+    }
+
+    void on_closed()
+    {
+        std::cout << "Closed!\n";
+    }
+
+    void on_data()
+    {
+        std::cout << "Data!\n";
+
+        char data[4096];
+
+        int rc = recv(data, sizeof(data));
+
+        if (rc > 0) {
+            std::string rdata(data, rc);
+            mill::Request req;
+            req.ParseFromString(rdata);
+
+            if (req.has_command()) {
+                std::cout << "got command\n";
+                dispatch(req.command());
+            }
+            if (req.has_command_list()) {
+                std::cout << "got command list\n";
+                dispatch(req.command_list());
+            }
+
+            millq.go([this] () { send_complete(); });
+            send_received();
+
+        } else {
+            std::cout << "recv returned " << rc << "\n";
+            close();
+        }
+    }
+
+    void dispatch(const mill::Command& cmd)
+    {
+        switch (cmd.type()) {
+            case mill::Command::ZERO:
+                std::cout << "ZERO\n";
+                break;
+            case mill::Command::RAPIDTO:
+                if (cmd.has_v()) {
+                    std::cout << "RATE: " << cmd.v() << " ACC: " << cmd.a() << "\n";
+                    millq.set_rapid_rate(cmd.v());
+                    millq.set_acceleration(cmd.a());
+                }
+                std::cout << "RAPIDTO: " << cmd.x() << "," << cmd.y() << "," << cmd.z() << "\n";
+                millq.move_to(cmd.has_x() ? cmd.x() : millq.x(),
+                        cmd.has_y() ? cmd.y() : millq.y(),
+                        cmd.has_z() ? cmd.z() : millq.z());
+                break;
+            case mill::Command::FEEDTO:
+                if (cmd.has_v()) {
+                    std::cout << "FEEDRATE: " << cmd.v();
+                    millq.set_feed_rate(cmd.v());
+                }
+                std::cout << "FEEDTO: " << cmd.x() << "," << cmd.y() << "," << cmd.z() << "\n";
+                millq.feed_to(cmd.has_x() ? cmd.x() : millq.x(),
+                        cmd.has_y() ? cmd.y() : millq.y(),
+                        cmd.has_z() ? cmd.z() : millq.z());
+                break;
+        }
+    }
+
+    void dispatch(const mill::CommandList& clist)
+    {
+        for (int i = 0; i < clist.command_size(); i++) {
+            const mill::Command& cmd = clist.command(i);
+            dispatch(cmd);
+        }
+    }
+
+    void send_received()
+    {
+        mill::Response resp;
+        mill::CommandReceived* recv = resp.mutable_command_received();
+
+        recv->set_number(42);
+
+        std::string out;
+        resp.SerializeToString(&out);
+
+        send(out.c_str(), out.length());
+    }
+
+    void send_complete()
+    {
+        mill::Response resp;
+        mill::CommandComplete* recv = resp.mutable_command_complete();
+
+        recv->set_number(42);
+
+        std::string out;
+        resp.SerializeToString(&out);
+
+        send(out.c_str(), out.length());
+    }
+
+private:
+    MoveQueue& millq;
+};
+
+class ProtobufSessionFactory : public SessionFactory
+{
+public:
+    ProtobufSessionFactory(MoveQueue& q)
+        : _q(q)
+    {}
+    ~ProtobufSessionFactory() {}
+
+    Session* session(int sock) {
+        return new ProtobufSession(sock, _q);
+    }
+    void destroy_session(Session* s) {
+        delete s;
+    }
+private:
+    MoveQueue& _q;
+};
+
+
+void protobuf_test(int argc, char** argv)
+{
+    ParPortMillDriver driver("/dev/parport0");
+    MoveQueue q(&driver);
+
+    if (argc > 1) {
+        std::fstream f(argv[1], std::ios::in | std::ios::binary);
+
+        mill::CommandList clist;
+        clist.ParseFromIstream(&f);
+
+        for (int i = 0; i < clist.command_size(); i++) {
+            const mill::Command& cmd = clist.command(i);
+
+
+            switch (cmd.type()) {
+                case mill::Command::ZERO:
+                    std::cout << "ZERO\n";
+                    break;
+                case mill::Command::RAPIDTO:
+                    if (cmd.has_v()) {
+                        q.set_rapid_rate(cmd.v());
+                        q.set_acceleration(cmd.a());
+                    }
+                    std::cout << "RAPIDTO: " << cmd.x() << "," << cmd.y() << "," << cmd.z() << "\n";
+                    q.move_to(cmd.has_x() ? cmd.x() : q.x(),
+                              cmd.has_y() ? cmd.y() : q.y(),
+                              cmd.has_z() ? cmd.z() : q.z());
+                    break;
+                case mill::Command::FEEDTO:
+                    if (cmd.has_v()) {
+                        q.set_feed_rate(cmd.v());
+                    }
+                    std::cout << "FEEDTO: " << cmd.x() << "," << cmd.y() << "," << cmd.z() << "\n";
+                    q.feed_to(cmd.has_x() ? cmd.x() : q.x(),
+                              cmd.has_y() ? cmd.y() : q.y(),
+                              cmd.has_z() ? cmd.z() : q.z());
+                    break;
+            }
+        }
+    }
+}
+
+class TestSession : public Session
+{
+public:
+    TestSession(int s) : Session(s)
+    {}
+
+    void on_connected()
+    {
+        std::cout << "Connected!\n";
+    }
+
+    void on_closed()
+    {
+        std::cout << "Closed!\n";
+    }
+
+    void on_data()
+    {
+        std::cout << "Data!\n";
+
+        char data[4096];
+
+        int rc = recv(data, sizeof(data));
+
+        if (rc > 0) {
+            data[rc] = 0;
+            std::cout << "read " << rc << " bytes " << data << "\n";
+            send(data, rc);
+        } else {
+            std::cout << "recv returned " << rc << "\n";
+            close();
+        }
+    }
+};
+
+
+void server_test()
+{
+    init_realtime();
+    ParPortMillDriver driver("/dev/parport0");
+    MoveQueue millq(&driver);
+    ProtobufSessionFactory factory(millq);
+
+    Server server(&factory);
+
+    server.listen(12345);
+
+    server.run();
+}
+
+
+int main(int argc, char** argv)
+{
+    //for (int i = 1; i < argc; i++) {
+        //gcode_test(argv[i]);
+    //}
+    //
+
+    //protobuf_test(argc, argv);
+    server_test();
 
     return 0;
 }
