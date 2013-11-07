@@ -3,13 +3,17 @@
 #ifndef _GCODED_AXIS_H_
 #define _GCODED_AXIS_H_
 
+#include <functional>
 #include <iostream>
 
 struct Movement {
-    int direction; //(0 one-way, 1 the other)
+    Movement() : direction(0), distance(0), velocity(0), acceleration(0) {}
+
+    int direction; //(0 toward motor(-), 1 away from motor(+))
     double distance;// (in mm)
     double velocity; //(in mm/sec)
     double acceleration; //(in mm/sec/sec)
+    std::function<double (double)> acceleration_function;  // acceleration as a function of time (0 is the time at move start)
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Movement& m)
@@ -24,6 +28,7 @@ inline std::ostream& operator<<(std::ostream& o, const Movement& m)
 struct MoveState {
     long steps;
     int direction;
+    double start_time;
     double frequency;
     double velocity;
     double acceleration;
@@ -36,8 +41,15 @@ inline std::ostream& operator<<(std::ostream& o, const MoveState& m)
 }
 
 struct Axis {
+    enum Limit {
+        AtMin = 0x1,
+        AtMax = 0x2
+    };
+
     char axis[2];
     int  moving;
+    int  limits; // Limit mask
+    long pos;
     Movement current_move;
     MoveState move_state;
 };

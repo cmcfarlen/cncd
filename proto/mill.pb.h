@@ -48,11 +48,12 @@ enum Command_CommandType {
   Command_CommandType_RAPID = 3,
   Command_CommandType_RAPIDTO = 4,
   Command_CommandType_ARCTO = 5,
-  Command_CommandType_ZERO = 6
+  Command_CommandType_ZERO = 6,
+  Command_CommandType_STARTPOS = 7
 };
 bool Command_CommandType_IsValid(int value);
 const Command_CommandType Command_CommandType_CommandType_MIN = Command_CommandType_PAUSE;
-const Command_CommandType Command_CommandType_CommandType_MAX = Command_CommandType_ZERO;
+const Command_CommandType Command_CommandType_CommandType_MAX = Command_CommandType_STARTPOS;
 const int Command_CommandType_CommandType_ARRAYSIZE = Command_CommandType_CommandType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Command_CommandType_descriptor();
@@ -147,6 +148,7 @@ class Command : public ::google::protobuf::Message {
   static const CommandType RAPIDTO = Command_CommandType_RAPIDTO;
   static const CommandType ARCTO = Command_CommandType_ARCTO;
   static const CommandType ZERO = Command_CommandType_ZERO;
+  static const CommandType STARTPOS = Command_CommandType_STARTPOS;
   static inline bool CommandType_IsValid(int value) {
     return Command_CommandType_IsValid(value);
   }

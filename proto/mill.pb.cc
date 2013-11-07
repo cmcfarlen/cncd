@@ -250,29 +250,30 @@ void protobuf_AddDesc_mill_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\nmill.proto\022\004mill\"\347\001\n\007Command\022\'\n\004type\030\001"
+    "\n\nmill.proto\022\004mill\"\365\001\n\007Command\022\'\n\004type\030\001"
     " \001(\0162\031.mill.Command.CommandType\022\t\n\001x\030\002 \001"
     "(\001\022\t\n\001y\030\003 \001(\001\022\t\n\001z\030\004 \001(\001\022\t\n\001v\030\005 \001(\001\022\t\n\001a"
     "\030\006 \001(\001\022\t\n\001i\030\007 \001(\001\022\t\n\001j\030\010 \001(\001\022\t\n\001k\030\t \001(\001\""
-    "[\n\013CommandType\022\t\n\005PAUSE\020\000\022\010\n\004FEED\020\001\022\n\n\006F"
+    "i\n\013CommandType\022\t\n\005PAUSE\020\000\022\010\n\004FEED\020\001\022\n\n\006F"
     "EEDTO\020\002\022\t\n\005RAPID\020\003\022\013\n\007RAPIDTO\020\004\022\t\n\005ARCTO"
-    "\020\005\022\010\n\004ZERO\020\006\"-\n\013CommandList\022\036\n\007command\030\001"
-    " \003(\0132\r.mill.Command\"!\n\017CommandReceived\022\016"
-    "\n\006number\030\001 \001(\005\"!\n\017CommandComplete\022\016\n\006num"
-    "ber\030\001 \001(\005\"\265\002\n\tMillState\022\037\n\001x\030\001 \001(\0132\024.mil"
-    "l.MillState.Axis\022\037\n\001y\030\002 \001(\0132\024.mill.MillS"
-    "tate.Axis\022\037\n\001z\030\003 \001(\0132\024.mill.MillState.Ax"
-    "is\022&\n\017current_command\030\004 \001(\0132\r.mill.Comma"
-    "nd\032\234\001\n\004Axis\0221\n\tdirection\030\001 \001(\0162\036.mill.Mi"
-    "llState.Axis.Direction\022\020\n\010position\030\002 \001(\001"
-    "\022\020\n\010velocity\030\003 \001(\001\022\024\n\014acceleration\030\004 \001(\001"
-    "\"\'\n\tDirection\022\010\n\004IDLE\020\000\022\007\n\003POS\020\001\022\007\n\003NEG\020"
-    "\001\"R\n\007Request\022\036\n\007command\030\001 \001(\0132\r.mill.Com"
-    "mand\022\'\n\014command_list\030\002 \001(\0132\021.mill.Comman"
-    "dList\"\221\001\n\010Response\022/\n\020command_received\030\001"
-    " \001(\0132\025.mill.CommandReceived\022/\n\020command_c"
-    "omplete\030\002 \001(\0132\025.mill.CommandComplete\022#\n\n"
-    "mill_state\030\003 \001(\0132\017.mill.MillState", 913);
+    "\020\005\022\010\n\004ZERO\020\006\022\014\n\010STARTPOS\020\007\"-\n\013CommandLis"
+    "t\022\036\n\007command\030\001 \003(\0132\r.mill.Command\"!\n\017Com"
+    "mandReceived\022\016\n\006number\030\001 \001(\005\"!\n\017CommandC"
+    "omplete\022\016\n\006number\030\001 \001(\005\"\265\002\n\tMillState\022\037\n"
+    "\001x\030\001 \001(\0132\024.mill.MillState.Axis\022\037\n\001y\030\002 \001("
+    "\0132\024.mill.MillState.Axis\022\037\n\001z\030\003 \001(\0132\024.mil"
+    "l.MillState.Axis\022&\n\017current_command\030\004 \001("
+    "\0132\r.mill.Command\032\234\001\n\004Axis\0221\n\tdirection\030\001"
+    " \001(\0162\036.mill.MillState.Axis.Direction\022\020\n\010"
+    "position\030\002 \001(\001\022\020\n\010velocity\030\003 \001(\001\022\024\n\014acce"
+    "leration\030\004 \001(\001\"\'\n\tDirection\022\010\n\004IDLE\020\000\022\007\n"
+    "\003POS\020\001\022\007\n\003NEG\020\001\"R\n\007Request\022\036\n\007command\030\001 "
+    "\001(\0132\r.mill.Command\022\'\n\014command_list\030\002 \001(\013"
+    "2\021.mill.CommandList\"\221\001\n\010Response\022/\n\020comm"
+    "and_received\030\001 \001(\0132\025.mill.CommandReceive"
+    "d\022/\n\020command_complete\030\002 \001(\0132\025.mill.Comma"
+    "ndComplete\022#\n\nmill_state\030\003 \001(\0132\017.mill.Mi"
+    "llState", 927);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "mill.proto", &protobuf_RegisterTypes);
   Command::default_instance_ = new Command();
@@ -317,6 +318,7 @@ bool Command_CommandType_IsValid(int value) {
     case 4:
     case 5:
     case 6:
+    case 7:
       return true;
     default:
       return false;
@@ -331,6 +333,7 @@ const Command_CommandType Command::RAPID;
 const Command_CommandType Command::RAPIDTO;
 const Command_CommandType Command::ARCTO;
 const Command_CommandType Command::ZERO;
+const Command_CommandType Command::STARTPOS;
 const Command_CommandType Command::CommandType_MIN;
 const Command_CommandType Command::CommandType_MAX;
 const int Command::CommandType_ARRAYSIZE;

@@ -88,6 +88,13 @@ public:
     TimerHandler* handler;
 };
 
+Timer::Timer(std::function<void ()> f)
+    : _p(new TimerPriv())
+{
+    _p->handler = new LambdaHandler(f);
+    create();
+}
+
 Timer::Timer(TimerHandler* h) : _p(new TimerPriv())
 {
     _p->handler = h;

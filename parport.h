@@ -18,6 +18,7 @@ public:
     int data(int o);
     int merge(int o, int m);
     int control();
+    int status();
 
 private:
     ParPortPrivate* _p;

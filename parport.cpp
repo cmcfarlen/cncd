@@ -65,4 +65,11 @@ int ParPort::control()
     return ctrl;
 }
 
+int ParPort::status()
+{
+    int ctrl;
+    ioctl(_p->fd, PPRSTATUS, &ctrl);
+    return ctrl;
+}
+
 

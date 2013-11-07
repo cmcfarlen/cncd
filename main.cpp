@@ -108,6 +108,24 @@ void move_test()
     sleep_till_done([&]() { return q.done(); });
 }
 
+void calibration_test()
+{
+    init_realtime();
+    ParPortMillDriver driver("/dev/parport0");
+    MoveQueue q(&driver);
+
+    q.calibrate();
+
+    q.go([&driver] () {
+            double* p = driver.position();
+            std::cout << "position: " <<  p[0] << " " << p[1] << " " << p[2] << "\n";
+            p = driver.max_position();
+            std::cout << "max position: " <<  p[0] << " " << p[1] << " " << p[2] << "\nall done\n";
+            });
+
+    sleep_till_done([&]() { return q.done(); });
+}
+
 void timer_test()
 {
     TestHandler h;
@@ -149,7 +167,11 @@ class ProtobufSession : public Session
 {
 public:
     ProtobufSession(int s, MoveQueue& q) : Session(s), millq(q)
-    {}
+    {
+        q.set_position_callback([this] (double *p) { 
+                send_state(p[0], p[1], p[2]);
+                     });
+    }
 
     void on_connected()
     {
@@ -197,6 +219,18 @@ public:
         switch (cmd.type()) {
             case mill::Command::ZERO:
                 std::cout << "ZERO\n";
+                millq.zero();
+                break;
+            case mill::Command::RAPID:
+                if (cmd.has_v()) {
+                    std::cout << "RATE: " << cmd.v() << " ACC: " << cmd.a() << "\n";
+                    millq.set_rapid_rate(cmd.v());
+                    millq.set_acceleration(cmd.a());
+                }
+                std::cout << "RAPID: " << cmd.x() << "," << cmd.y() << "," << cmd.z() << "\n";
+                millq.move(cmd.has_x() ? cmd.x() : millq.x(),
+                        cmd.has_y() ? cmd.y() : millq.y(),
+                        cmd.has_z() ? cmd.z() : millq.z());
                 break;
             case mill::Command::RAPIDTO:
                 if (cmd.has_v()) {
@@ -218,6 +252,12 @@ public:
                 millq.feed_to(cmd.has_x() ? cmd.x() : millq.x(),
                         cmd.has_y() ? cmd.y() : millq.y(),
                         cmd.has_z() ? cmd.z() : millq.z());
+                break;
+            case mill::Command::STARTPOS:
+                millq.set_start_position(cmd.has_x() ? cmd.x() : 0,
+                                         cmd.has_y() ? cmd.y() : 0,
+                                         cmd.has_z() ? cmd.z() : 0);
+                std::cout << "STARTPOS: " << cmd.x() << "," << cmd.y() << "," << cmd.z() << "\n";
                 break;
         }
     }
@@ -253,6 +293,23 @@ public:
         std::string out;
         resp.SerializeToString(&out);
 
+        send(out.c_str(), out.length());
+    }
+
+    void send_state(double x, double y, double z)
+    {
+        mill::Response resp;
+        mill::MillState* st = resp.mutable_mill_state();
+
+        mill::MillState::Axis* a = st->mutable_x();
+        a->set_position(x);
+        a = st->mutable_y();
+        a->set_position(y);
+        a = st->mutable_z();
+        a->set_position(z);
+
+        std::string out;
+        resp.SerializeToString(&out);
         send(out.c_str(), out.length());
     }
 
@@ -369,7 +426,33 @@ void server_test()
 
     server.listen(12345);
 
+    millq.calibrate();
+    millq.go([&driver] () {
+            double* p = driver.position();
+            std::cout << "position: " <<  p[0] << " " << p[1] << " " << p[2] << "\n";
+            p = driver.max_position();
+            std::cout << "max position: " <<  p[0] << " " << p[1] << " " << p[2] << "\nall done\n";
+            });
+
     server.run();
+}
+
+void pport_test()
+{
+    ParPort port("/dev/parport0");
+
+    Timer t([&port] () {
+       int ctrl = port.status();
+       if (ctrl & 0x40) {
+           std::cout << "limit switch!\n";
+       }
+    });
+
+    t.start(30);
+
+    while (1) {
+        sleep(100);
+    }
 }
 
 
@@ -382,6 +465,8 @@ int main(int argc, char** argv)
 
     //protobuf_test(argc, argv);
     server_test();
+    //calibration_test();
+    //pport_test();
 
     return 0;
 }

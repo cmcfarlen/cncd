@@ -11,7 +11,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = descriptor.FileDescriptor(
   name='mill.proto',
   package='mill',
-  serialized_pb='\n\nmill.proto\x12\x04mill\"\xe7\x01\n\x07\x43ommand\x12\'\n\x04type\x18\x01 \x01(\x0e\x32\x19.mill.Command.CommandType\x12\t\n\x01x\x18\x02 \x01(\x01\x12\t\n\x01y\x18\x03 \x01(\x01\x12\t\n\x01z\x18\x04 \x01(\x01\x12\t\n\x01v\x18\x05 \x01(\x01\x12\t\n\x01\x61\x18\x06 \x01(\x01\x12\t\n\x01i\x18\x07 \x01(\x01\x12\t\n\x01j\x18\x08 \x01(\x01\x12\t\n\x01k\x18\t \x01(\x01\"[\n\x0b\x43ommandType\x12\t\n\x05PAUSE\x10\x00\x12\x08\n\x04\x46\x45\x45\x44\x10\x01\x12\n\n\x06\x46\x45\x45\x44TO\x10\x02\x12\t\n\x05RAPID\x10\x03\x12\x0b\n\x07RAPIDTO\x10\x04\x12\t\n\x05\x41RCTO\x10\x05\x12\x08\n\x04ZERO\x10\x06\"-\n\x0b\x43ommandList\x12\x1e\n\x07\x63ommand\x18\x01 \x03(\x0b\x32\r.mill.Command\"!\n\x0f\x43ommandReceived\x12\x0e\n\x06number\x18\x01 \x01(\x05\"!\n\x0f\x43ommandComplete\x12\x0e\n\x06number\x18\x01 \x01(\x05\"\xb5\x02\n\tMillState\x12\x1f\n\x01x\x18\x01 \x01(\x0b\x32\x14.mill.MillState.Axis\x12\x1f\n\x01y\x18\x02 \x01(\x0b\x32\x14.mill.MillState.Axis\x12\x1f\n\x01z\x18\x03 \x01(\x0b\x32\x14.mill.MillState.Axis\x12&\n\x0f\x63urrent_command\x18\x04 \x01(\x0b\x32\r.mill.Command\x1a\x9c\x01\n\x04\x41xis\x12\x31\n\tdirection\x18\x01 \x01(\x0e\x32\x1e.mill.MillState.Axis.Direction\x12\x10\n\x08position\x18\x02 \x01(\x01\x12\x10\n\x08velocity\x18\x03 \x01(\x01\x12\x14\n\x0c\x61\x63\x63\x65leration\x18\x04 \x01(\x01\"\'\n\tDirection\x12\x08\n\x04IDLE\x10\x00\x12\x07\n\x03POS\x10\x01\x12\x07\n\x03NEG\x10\x01\"R\n\x07Request\x12\x1e\n\x07\x63ommand\x18\x01 \x01(\x0b\x32\r.mill.Command\x12\'\n\x0c\x63ommand_list\x18\x02 \x01(\x0b\x32\x11.mill.CommandList\"\x91\x01\n\x08Response\x12/\n\x10\x63ommand_received\x18\x01 \x01(\x0b\x32\x15.mill.CommandReceived\x12/\n\x10\x63ommand_complete\x18\x02 \x01(\x0b\x32\x15.mill.CommandComplete\x12#\n\nmill_state\x18\x03 \x01(\x0b\x32\x0f.mill.MillState')
+  serialized_pb='\n\nmill.proto\x12\x04mill\"\xf5\x01\n\x07\x43ommand\x12\'\n\x04type\x18\x01 \x01(\x0e\x32\x19.mill.Command.CommandType\x12\t\n\x01x\x18\x02 \x01(\x01\x12\t\n\x01y\x18\x03 \x01(\x01\x12\t\n\x01z\x18\x04 \x01(\x01\x12\t\n\x01v\x18\x05 \x01(\x01\x12\t\n\x01\x61\x18\x06 \x01(\x01\x12\t\n\x01i\x18\x07 \x01(\x01\x12\t\n\x01j\x18\x08 \x01(\x01\x12\t\n\x01k\x18\t \x01(\x01\"i\n\x0b\x43ommandType\x12\t\n\x05PAUSE\x10\x00\x12\x08\n\x04\x46\x45\x45\x44\x10\x01\x12\n\n\x06\x46\x45\x45\x44TO\x10\x02\x12\t\n\x05RAPID\x10\x03\x12\x0b\n\x07RAPIDTO\x10\x04\x12\t\n\x05\x41RCTO\x10\x05\x12\x08\n\x04ZERO\x10\x06\x12\x0c\n\x08STARTPOS\x10\x07\"-\n\x0b\x43ommandList\x12\x1e\n\x07\x63ommand\x18\x01 \x03(\x0b\x32\r.mill.Command\"!\n\x0f\x43ommandReceived\x12\x0e\n\x06number\x18\x01 \x01(\x05\"!\n\x0f\x43ommandComplete\x12\x0e\n\x06number\x18\x01 \x01(\x05\"\xb5\x02\n\tMillState\x12\x1f\n\x01x\x18\x01 \x01(\x0b\x32\x14.mill.MillState.Axis\x12\x1f\n\x01y\x18\x02 \x01(\x0b\x32\x14.mill.MillState.Axis\x12\x1f\n\x01z\x18\x03 \x01(\x0b\x32\x14.mill.MillState.Axis\x12&\n\x0f\x63urrent_command\x18\x04 \x01(\x0b\x32\r.mill.Command\x1a\x9c\x01\n\x04\x41xis\x12\x31\n\tdirection\x18\x01 \x01(\x0e\x32\x1e.mill.MillState.Axis.Direction\x12\x10\n\x08position\x18\x02 \x01(\x01\x12\x10\n\x08velocity\x18\x03 \x01(\x01\x12\x14\n\x0c\x61\x63\x63\x65leration\x18\x04 \x01(\x01\"\'\n\tDirection\x12\x08\n\x04IDLE\x10\x00\x12\x07\n\x03POS\x10\x01\x12\x07\n\x03NEG\x10\x01\"R\n\x07Request\x12\x1e\n\x07\x63ommand\x18\x01 \x01(\x0b\x32\r.mill.Command\x12\'\n\x0c\x63ommand_list\x18\x02 \x01(\x0b\x32\x11.mill.CommandList\"\x91\x01\n\x08Response\x12/\n\x10\x63ommand_received\x18\x01 \x01(\x0b\x32\x15.mill.CommandReceived\x12/\n\x10\x63ommand_complete\x18\x02 \x01(\x0b\x32\x15.mill.CommandComplete\x12#\n\nmill_state\x18\x03 \x01(\x0b\x32\x0f.mill.MillState')
 
 
 
@@ -49,11 +49,15 @@ _COMMAND_COMMANDTYPE = descriptor.EnumDescriptor(
       name='ZERO', index=6, number=6,
       options=None,
       type=None),
+    descriptor.EnumValueDescriptor(
+      name='STARTPOS', index=7, number=7,
+      options=None,
+      type=None),
   ],
   containing_type=None,
   options=None,
   serialized_start=161,
-  serialized_end=252,
+  serialized_end=266,
 )
 
 _MILLSTATE_AXIS_DIRECTION = descriptor.EnumDescriptor(
@@ -77,8 +81,8 @@ _MILLSTATE_AXIS_DIRECTION = descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=642,
-  serialized_end=681,
+  serialized_start=656,
+  serialized_end=695,
 )
 
 
@@ -163,7 +167,7 @@ _COMMAND = descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=21,
-  serialized_end=252,
+  serialized_end=266,
 )
 
 
@@ -190,8 +194,8 @@ _COMMANDLIST = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=254,
-  serialized_end=299,
+  serialized_start=268,
+  serialized_end=313,
 )
 
 
@@ -218,8 +222,8 @@ _COMMANDRECEIVED = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=301,
-  serialized_end=334,
+  serialized_start=315,
+  serialized_end=348,
 )
 
 
@@ -246,8 +250,8 @@ _COMMANDCOMPLETE = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=336,
-  serialized_end=369,
+  serialized_start=350,
+  serialized_end=383,
 )
 
 
@@ -296,8 +300,8 @@ _MILLSTATE_AXIS = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=525,
-  serialized_end=681,
+  serialized_start=539,
+  serialized_end=695,
 )
 
 _MILLSTATE = descriptor.Descriptor(
@@ -344,8 +348,8 @@ _MILLSTATE = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=372,
-  serialized_end=681,
+  serialized_start=386,
+  serialized_end=695,
 )
 
 
@@ -379,8 +383,8 @@ _REQUEST = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=683,
-  serialized_end=765,
+  serialized_start=697,
+  serialized_end=779,
 )
 
 
@@ -421,8 +425,8 @@ _RESPONSE = descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=768,
-  serialized_end=913,
+  serialized_start=782,
+  serialized_end=927,
 )
 
 _COMMAND.fields_by_name['type'].enum_type = _COMMAND_COMMANDTYPE

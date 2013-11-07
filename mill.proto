@@ -9,6 +9,7 @@ message Command {
         RAPIDTO = 4;
         ARCTO = 5;
         ZERO = 6;
+        STARTPOS = 7;
     }
 
     optional CommandType type = 1;

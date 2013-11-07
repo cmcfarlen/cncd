@@ -13,7 +13,13 @@ public:
     ParPortMillDriver(const std::string& device);
     virtual ~ParPortMillDriver();
 
+    void move_absolute(double x, double y, double z, double vel, double acc, MillDriverCallback*);
     void move(Movement* x, Movement* y, Movement* z, MillDriverCallback* callback);
+    void zero(const char* axis);
+    void calibrate(MillDriverCallback*);
+
+    double* position();
+    double* max_position();
 private:
     ParPortMillDriverPrivate* _p;
 };
