@@ -17,7 +17,7 @@
 #include "gcode_parser.h"
 #include "server.h"
 
-#include "proto/mill.pb.h"
+#include "mill.pb.h"
 
 class TestHandler : public TimerHandler
 {
