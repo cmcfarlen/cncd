@@ -19,6 +19,8 @@
 
 #include "mill.pb.h"
 
+#include "data.h"
+
 class TestHandler : public TimerHandler
 {
 public:
@@ -455,6 +457,39 @@ void pport_test()
     }
 }
 
+void config_test()
+{
+    Data item;
+
+    item["one"] = "two";
+    item["three"]["four"] = "a";
+    item["three"]["dbl"] = 1.234124;
+    item["list"].append(42).append("2423");
+
+    std::cout << item << "\n";
+
+    std::vector<std::string> cases = {
+        "\"test\"",
+        "{:a \"b\"}",
+        "[1 2 3 4]",
+        "{:one {:two [1 2 3 4]} :a \"bcds\" :o 11 :u 123.123124}"
+    };
+
+    for (auto c: cases) {
+        Data td;
+        td.parse(c);
+        std::cout << "test case: " << c << "\n" << td << "\n";
+    }
+
+    std::ifstream fs("./simulate.conf");
+    Data config;
+    config.parse(fs);
+    std::cout << "config data: " << config << "\n";
+
+    std::cout << "acceleration = " << config["machine"]["rapid_acceleration"] << "\n";
+    std::cout << "x pitch = " << config["machine"]["x"]["pitch"] << "\n";
+}
+
 
 int main(int argc, char** argv)
 {
@@ -464,9 +499,11 @@ int main(int argc, char** argv)
     //
 
     //protobuf_test(argc, argv);
-    server_test();
+    //server_test();
     //calibration_test();
     //pport_test();
+    //
+    config_test();
 
     return 0;
 }

@@ -1,5 +1,5 @@
 
-CXXFLAGS = -std=c++11
+CXXFLAGS = -std=c++11 -g3 -O0
 SOURCES += $(shell find . -name "*.cpp")
 OBJS = mill.pb.o
 OBJS += $(SOURCES:.cpp=.o)
@@ -14,7 +14,7 @@ OBJS += $(SOURCES:.cpp=.o)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 gcoded: $(OBJS)
-	g++ -std=c++11 -o gcoded $(OBJS) -lrt $(shell pkg-config --libs protobuf)
+	g++ $(CXXFLAGS) -o gcoded $(OBJS) -lrt $(shell pkg-config --libs protobuf)
 
 clean:
 	rm -f *.o
