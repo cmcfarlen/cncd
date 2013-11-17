@@ -33,7 +33,9 @@ struct ParPortAxis : public Axis
         Bouncing = 0x4,   // set if we hit a limit switch and are reversing direction to move off the switch.
         FindLimits = 0x8
     };
-    int  shift;  // bits over for this axis (x=0 y=2 z=4)
+    int  dir_bits;
+    int  step_bits;
+    int  bit_mask;
     int  limit_mask;  // bitmask for a limit switch (0 to disable)
     bool  flip_dir; // if we need to flip the direction bit (1 moves toward the motor)
     int max_steps; // the max number of steps away from the motor (determined by calibration)
@@ -47,8 +49,10 @@ struct ParPortAxis : public Axis
     ParPortMillDriverPrivate* priv;
     double ts;
 
-    ParPortAxis(ParPortMillDriverPrivate* p, const char* n, int bitshift, int limitmask, bool fl, long max = 0, double ptch = 4.0l, int microstep = 8, int motorsteps = 200)
-        : shift(bitshift),
+    ParPortAxis(ParPortMillDriverPrivate* p, const char* n, int dirbits, int stepbits, int bitmask, int limitmask, bool fl, long max = 0, double ptch = 4.0l, int microstep = 8, int motorsteps = 200)
+        : dir_bits(dirbits),
+          step_bits(stepbits),
+          bit_mask(bitmask),
           limit_mask(limitmask),
           flip_dir(fl),
           max_steps(max),
@@ -173,14 +177,18 @@ void ParPortAxisController::tick()
     }
 }
 
+//
+//  7  6  5  4  3  2  1  0
+// DA SA DZ SZ DY SY DX SX
+
 class ParPortMillDriverPrivate
 {
 public:
     ParPortMillDriverPrivate(const std::string& path)
         : port(path),
-          x(this, "x", 0, 0, true, 0),
-          y(this, "y", 2, 0, true, 0),
-          z(this, "z", 4, 0x40, true, 60700),
+          x(this, "x", 0x82, 0x41, 0xc3, 0x40, true, 127694),
+          y(this, "y", 0x08, 0x04, 0x0c, 0x20, true, 127694),
+          z(this, "z", 0x20, 0x10, 0x30, 0x10, true, 60700),
           callback(0)
     {
     }
@@ -270,13 +278,13 @@ void ParPortAxis::calibration_step()
         }
     }
 
-    int d = move_state.direction << 1;
+    int d = move_state.direction ? dir_bits : 0;
     if (flip_dir) {
-        d = (1-move_state.direction)<<1;
+        d = move_state.direction ? 0 : dir_bits;
     }
 
     if ((move_state.steps & 0x1) == 0) {
-        d |= 1;
+        d |= step_bits;
     } else {
         pos = move_state.direction ? pos + 1 : pos - 1;
     }
@@ -295,24 +303,25 @@ void ParPortAxis::calibration_step()
         }
     }
 
-    priv->port.merge(d << shift, 0x3 << shift);
+    priv->port.merge(d, bit_mask);
 }
 
 void ParPortAxis::step()
 {
     double t = now();
-    int d = move_state.direction << 1;
+
+    int d = move_state.direction ? dir_bits : 0;
     if (flip_dir) {
-        d = (1-move_state.direction)<<1;
+        d = move_state.direction ? 0 : dir_bits;
     }
 
-    if (move_state.steps & 0x1) {
-        d |= 1;
+    if ((move_state.steps & 0x1) == 0) {
+        d |= step_bits;
     } else {
         pos = move_state.direction ? pos + 1 : pos - 1;
     }
 
-    priv->port.merge(d << shift, 0x3 << shift);
+    priv->port.merge(d, bit_mask);
 
     // check limit switches
     if (limit_mask) {

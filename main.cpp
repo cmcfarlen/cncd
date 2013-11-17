@@ -80,7 +80,8 @@ void move_test()
     ParPortMillDriver driver("/dev/parport0");
     MoveQueue q(&driver);
 
-    q.move_to(0, 0, 40);
+    q.move_to(5, 0, 0);
+    q.move_to(0, 0, 0);
 
     /*
     double z = -9;
@@ -443,8 +444,15 @@ void pport_test()
 
     Timer t([&port] () {
        int ctrl = port.status();
+       //std::cout << std::hex << ctrl << std::dec << "\n";
        if (ctrl & 0x40) {
-           std::cout << "limit switch!\n";
+           std::cout << "X limit switch!\n";
+       }
+       if (ctrl & 0x20) {
+           std::cout << "Y limit switch!\n";
+       }
+       if (ctrl & 0x10) {
+           std::cout << "Z limit switch!\n";
        }
     });
 
@@ -465,6 +473,7 @@ int main(int argc, char** argv)
 
     //protobuf_test(argc, argv);
     server_test();
+//    move_test();
     //calibration_test();
     //pport_test();
 
