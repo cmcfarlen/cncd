@@ -41,6 +41,7 @@ struct ParPortAxis : public Axis
     int max_steps; // the max number of steps away from the motor (determined by calibration)
     int flags;
     int micro_step;
+    int motor_step;
     int step_rev;
     double pitch;
     double step_ratio;
@@ -49,16 +50,19 @@ struct ParPortAxis : public Axis
     ParPortMillDriverPrivate* priv;
     double ts;
 
-    ParPortAxis(ParPortMillDriverPrivate* p, const char* n, int dirbits, int stepbits, int bitmask, int limitmask, bool fl, long max = 0, double ptch = 4.0l, int microstep = 8, int motorsteps = 200)
-        : dir_bits(dirbits),
-          step_bits(stepbits),
-          bit_mask(bitmask),
-          limit_mask(limitmask),
-          flip_dir(fl),
-          max_steps(max),
-          micro_step(microstep), 
-          pitch(ptch),
-          step_rev(micro_step * motorsteps),
+    ParPortAxis(ParPortMillDriverPrivate* p, const char* n, Data& config)
+            
+            //int dirbits, int stepbits, int bitmask, int limitmask, bool fl, long max = 0, double ptch = 4.0l, int microstep = 8, int motorsteps = 200)
+        : dir_bits(config["dir_bits"].asLong()),
+          step_bits(config["step_bits"].asLong()),
+          bit_mask(dir_bits | step_bits),
+          limit_mask(config["limit_mask"].asLong()),
+          flip_dir(true),
+          max_steps(config["step_range"].asLong()),
+          micro_step(config["micro_step"].asLong()), 
+          motor_step(config["motor_step"].asLong()),
+          pitch(config["pitch"].asDouble()),
+          step_rev(micro_step * motor_step),
           step_ratio(step_rev / pitch),
           controller(new ParPortAxisController(this)),
           timer(new Timer(controller)),
@@ -184,11 +188,14 @@ void ParPortAxisController::tick()
 class ParPortMillDriverPrivate
 {
 public:
-    ParPortMillDriverPrivate(ParPort* p)
+    ParPortMillDriverPrivate(ParPort* p, Data& config)
         : port(p),
-          x(this, "x", 0x82, 0x41, 0xc3, 0x40, true, 127694),
-          y(this, "y", 0x08, 0x04, 0x0c, 0x20, true, 127694),
-          z(this, "z", 0x20, 0x10, 0x30, 0x10, true, 60700),
+          x(this, "x", config["x"]),
+          y(this, "y", config["y"]),
+          z(this, "z", config["z"]),
+          //x(this, "x", 0x82, 0x41, 0xc3, 0x40, true, 127694),
+          //y(this, "y", 0x08, 0x04, 0x0c, 0x20, true, 127694),
+          //z(this, "z", 0x20, 0x10, 0x30, 0x10, true, 60700),
           callback(0)
     {
     }
@@ -380,8 +387,8 @@ void ParPortAxis::calibrate()
     }
 }
 
-ParPortMillDriver::ParPortMillDriver(ParPort* p)
-    : _p(new ParPortMillDriverPrivate(p))
+ParPortMillDriver::ParPortMillDriver(ParPort* p, Data& config)
+    : _p(new ParPortMillDriverPrivate(p, config))
 {
 }
 

@@ -5,12 +5,13 @@
 
 #include "mill_driver.h"
 #include "parport.h"
+#include "data.h"
 
 class ParPortMillDriverPrivate;
 class ParPortMillDriver : public MillDriver
 {
 public:
-    ParPortMillDriver(ParPort* port);
+    ParPortMillDriver(ParPort* port, Data& config);
     virtual ~ParPortMillDriver();
 
     void move_absolute(double x, double y, double z, double vel, double acc, MillDriverCallback*);

@@ -19,6 +19,7 @@ int main(int argc, char** argv)
         "\"test\"",
         "{:a \"b\"}",
         "[1 2 3 4]",
+        "{:a 0x53 :b [0x32 0x52 0x34]}",
         "{:one {:two [1 2 3 4]} :a \"bcds\" :o 11 :u 123.123124}"
     };
 

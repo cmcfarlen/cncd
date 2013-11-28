@@ -1,5 +1,8 @@
 /* configuration.h */
 
+#ifndef _CNCD_DATA_H_
+#define _CNCD_DATA_H_
+
 #include <map>
 #include <vector>
 #include <string>
@@ -98,3 +101,4 @@ inline std::istream& operator>>(std::istream& is, Data& d)
     return is;
 }
 
+#endif

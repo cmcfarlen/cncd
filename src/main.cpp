@@ -12,6 +12,7 @@
 
 #include "timer.h"
 #include "real_parport.h"
+#include "fake_parport.h"
 #include "parport_mill_driver.h"
 #include "move_queue.h"
 #include "gcode_parser.h"
@@ -20,6 +21,16 @@
 #include "protobuf_session.h"
 
 #include "mill.pb.h"
+
+
+Data load_config(const char* fname)
+{
+    Data c;
+    std::ifstream fs(fname);
+    c.parse(fs);
+    std::cout << "config!\n" << c << "\n";
+    return c;
+}
 
 template <typename F>
 void sleep_till_done(F d)
@@ -51,9 +62,18 @@ void init_realtime()
 void move_test()
 {
     init_realtime();
-    RealParPort port("/dev/parport0");
-    ParPortMillDriver driver(&port);
+    Data c = load_config("./simulate.conf");
+    //RealParPort port("/dev/parport0");
+    FakeParPort port(c["machine"]);
+    ParPortMillDriver driver(&port, c["machine"]);
     MoveQueue q(&driver);
+
+    std::cout << port << "\n";
+
+    q.set_position_callback([&port] (double* p) {
+    std::cout << "x: " << p[0] << " y: " << p[1] << " z: " << p[2] << "\n";
+    std::cout << port << "\n";
+            });
 
     q.move_to(5, 0, 0);
     q.move_to(0, 0, 0);
@@ -82,16 +102,24 @@ void move_test()
     q.go([] () { std::cout << " all done\n"; });
 
     sleep_till_done([&]() { return q.done(); });
+    std::cout << port << "\n";
 }
 
 void calibration_test()
 {
     init_realtime();
-    RealParPort port("/dev/parport0");
-    ParPortMillDriver driver(&port);
+    Data c = load_config("./simulate.conf");
+    //RealParPort port("/dev/parport0");
+    FakeParPort port(c["machine"]);
+    ParPortMillDriver driver(&port, c["machine"]);
     MoveQueue q(&driver);
 
     q.calibrate();
+
+    q.set_position_callback([&port] (double* p) {
+    std::cout << "x: " << p[0] << " y: " << p[1] << " z: " << p[2] << "\n";
+    std::cout << port << "\n";
+            });
 
     q.go([&driver] () {
             double* p = driver.position();
@@ -143,9 +171,11 @@ public:
 void server_test()
 {
     init_realtime();
-    RealParPort port("/dev/parport0");
+    Data c = load_config("./simulate.conf");
+    //RealParPort port("/dev/parport0");
+    FakeParPort port(c);
 
-    ParPortMillDriver driver(&port);
+    ParPortMillDriver driver(&port, c);
     MoveQueue millq(&driver);
     ProtobufSessionFactory factory(millq);
 
@@ -167,7 +197,9 @@ void server_test()
 
 int main(int argc, char** argv)
 {
-    server_test();
+    //server_test();
+    //move_test();
+    calibration_test();
 
     return 0;
 }

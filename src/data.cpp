@@ -292,6 +292,10 @@ void Data::parse(std::istream& is)
                 double rem;
                 is >> rem;
                 asDouble() = lv + rem;
+            } else if (is.peek() == 'x') {
+                is.unget();
+                is >> std::hex >> lv >> std::dec;
+                asLong() = lv;
             } else {
                 asLong() = lv;
             }
