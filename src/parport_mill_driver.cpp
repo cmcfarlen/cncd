@@ -184,8 +184,8 @@ void ParPortAxisController::tick()
 class ParPortMillDriverPrivate
 {
 public:
-    ParPortMillDriverPrivate(const std::string& path)
-        : port(path),
+    ParPortMillDriverPrivate(ParPort* p)
+        : port(p),
           x(this, "x", 0x82, 0x41, 0xc3, 0x40, true, 127694),
           y(this, "y", 0x08, 0x04, 0x0c, 0x20, true, 127694),
           z(this, "z", 0x20, 0x10, 0x30, 0x10, true, 60700),
@@ -214,7 +214,7 @@ public:
         finished(a);
     }
 
-    ParPort port;
+    ParPort* port;
     ParPortAxis x;
     ParPortAxis y;
     ParPortAxis z;
@@ -226,7 +226,7 @@ void ParPortAxis::calibration_step()
 {
     // check limit switches
     if (limit_mask) {
-        int lim = priv->port.status();
+        int lim = priv->port->status();
 
         if (flags & Bouncing) {
             // expect limit bit to be set, so check for cleared, set zero.
@@ -303,7 +303,7 @@ void ParPortAxis::calibration_step()
         }
     }
 
-    priv->port.merge(d, bit_mask);
+    priv->port->merge(d, bit_mask);
 }
 
 void ParPortAxis::step()
@@ -321,11 +321,11 @@ void ParPortAxis::step()
         pos = move_state.direction ? pos + 1 : pos - 1;
     }
 
-    priv->port.merge(d, bit_mask);
+    priv->port->merge(d, bit_mask);
 
     // check limit switches
     if (limit_mask) {
-        int lim = priv->port.status();
+        int lim = priv->port->status();
 
         // we are at a limit switch
         if (lim & limit_mask) {
@@ -358,7 +358,7 @@ void ParPortAxis::step()
 void ParPortAxis::calibrate()
 {
     if (limit_mask) {
-        int status = priv->port.status();
+        int status = priv->port->status();
         if (status & limit_mask) {
             std::cout << axis << " axis: Can't calibrate as limit is reached. move away from limit switch\n";
             limits = AtMin | AtMax;
@@ -380,8 +380,8 @@ void ParPortAxis::calibrate()
     }
 }
 
-ParPortMillDriver::ParPortMillDriver(const std::string& path)
-    : _p(new ParPortMillDriverPrivate(path))
+ParPortMillDriver::ParPortMillDriver(ParPort* p)
+    : _p(new ParPortMillDriverPrivate(p))
 {
 }
 

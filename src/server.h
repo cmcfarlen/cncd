@@ -3,6 +3,8 @@
 #ifndef _GCODED_SERVER_H_
 #define _GCODED_SERVER_H_
 
+#include <stdlib.h>
+
 class Session
 {
 public:

@@ -10,7 +10,7 @@ class ParPortMillDriverPrivate;
 class ParPortMillDriver : public MillDriver
 {
 public:
-    ParPortMillDriver(const std::string& device);
+    ParPortMillDriver(ParPort* port);
     virtual ~ParPortMillDriver();
 
     void move_absolute(double x, double y, double z, double vel, double acc, MillDriverCallback*);
