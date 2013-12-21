@@ -6,7 +6,7 @@ import math
 import numpy
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect(('localhost', 12345))
+client_socket.connect(('localhost', 12333))
 
 START_X = 50
 START_Y = 50

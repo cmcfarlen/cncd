@@ -42,8 +42,8 @@ struct ParPortAxis : public Axis
     int flags;
     int micro_step;
     int motor_step;
-    int step_rev;
     double pitch;
+    int step_rev;
     double step_ratio;
     ParPortAxisController* controller;
     Timer* timer;
@@ -59,6 +59,7 @@ struct ParPortAxis : public Axis
           limit_mask(config["limit_mask"].asLong()),
           flip_dir(true),
           max_steps(config["step_range"].asLong()),
+          flags(0),
           micro_step(config["micro_step"].asLong()), 
           motor_step(config["motor_step"].asLong()),
           pitch(config["pitch"].asDouble()),
@@ -66,7 +67,8 @@ struct ParPortAxis : public Axis
           step_ratio(step_rev / pitch),
           controller(new ParPortAxisController(this)),
           timer(new Timer(controller)),
-          priv(p)
+          priv(p),
+          ts(0)
     {
         pos = 0;
         moving = 0;
@@ -242,7 +244,7 @@ void ParPortAxis::calibration_step()
                 flags &= ~Bouncing;
                 // if we are currently moving away, then we are at the motor end (position 0)
                 if (move_state.direction == 1) {
-                    std::cout << "found zero\n";
+                    std::cout << axis << " found zero\n";
                     pos = 0;
 
                     // if we are finding limits, we are calibrated at this point and can move to the middle
@@ -253,7 +255,7 @@ void ParPortAxis::calibration_step()
 
                 } else {
                     // otherwise we are away, moving toward the motor and are now done calibrating
-                    std::cout << "found max steps " << pos << "\n";
+                    std::cout << axis << " found max steps " << pos << "\n";
                     max_steps = pos;
                     flags |= Calibrated;
 
@@ -267,12 +269,12 @@ void ParPortAxis::calibration_step()
                 if (move_state.direction == 0) {
                     if ((flags & Calibrated) == 0) {
                         limits = AtMin;
-                        std::cout << "At minimum\n";
+                        std::cout << axis << " at minimum\n";
                     }
                 } else {
                     if (pos > 100) {
                         limits = AtMax;
-                        std::cout << "At max\n";
+                        std::cout << axis << " at max\n";
                     }
                 }
 
@@ -356,7 +358,14 @@ void ParPortAxis::step()
         move_state.velocity += (t - ts) * move_state.acceleration;
         move_state.frequency = step_frequency(move_state.velocity);
         timer->set_frequency(move_state.frequency);
-        if (move_state.velocity >= current_move.velocity) { move_state.acceleration = 0; } } move_state.steps--; ts = t; if (move_state.steps == 0) { moving = 0;
+        if (move_state.velocity >= current_move.velocity) {
+            move_state.acceleration = 0;
+        }
+    }
+    move_state.steps--;
+    ts = t;
+    if (move_state.steps == 0) {
+        moving = 0;
         timer->stop();
         priv->finished(this);
     }

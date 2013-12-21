@@ -173,9 +173,9 @@ void server_test()
     init_realtime();
     Data c = load_config("./simulate.conf");
     //RealParPort port("/dev/parport0");
-    FakeParPort port(c);
+    FakeParPort port(c["machine"]);
+    ParPortMillDriver driver(&port, c["machine"]);
 
-    ParPortMillDriver driver(&port, c);
     MoveQueue millq(&driver);
     ProtobufSessionFactory factory(millq);
 
@@ -197,9 +197,9 @@ void server_test()
 
 int main(int argc, char** argv)
 {
-    //server_test();
+    server_test();
     //move_test();
-    calibration_test();
+    //calibration_test();
 
     return 0;
 }
